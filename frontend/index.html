@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>KaamMitra - मेरो समस्या, नजिकैको समाधान</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:#f5f7fb;
+  font-family:Arial,sans-serif;
+  color:#172033
+}
+header{
+  background:#111827;
+  color:#fff;
+  padding:20px;
+  text-align:center
+}
+.logo{
+  font-size:28px;
+  font-weight:700
+}
+.tag{
+  margin-top:5px;
+  color:#d1d5db
+}
+.wrap{
+  max-width:700px;
+  margin:auto;
+  padding:18px
+}
+.card{
+  background:#fff;
+  border-radius:18px;
+  padding:18px;
+  margin:14px 0;
+  box-shadow:0 5px 18px #0001
+}
+h2{margin-top:0}
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px
+}
+.cat{
+  padding:15px;
+  border:0;
+  border-radius:12px;
+  background:#eef2f7;
+  cursor:pointer;
+  font-size:15px
+}
+.cat.active{
+  background:#16a34a;
+  color:#fff
+}
+input,textarea{
+  width:100%;
+  padding:13px;
+  margin:7px 0 12px;
+  border:1px solid #d7dce5;
+  border-radius:11px;
+  font-size:15px
+}
+button.submit{
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:12px;
+  background:#16a34a;
+  color:#fff;
+  font-size:16px;
+  font-weight:700
+}
+#msg{
+  margin-top:12px;
+  font-weight:700
+}
+.result{
+  background:#f0fdf4;
+  padding:12px;
+  border-radius:12px;
+  margin-top:12px
+}
+.money{
+  font-size:24px;
+  font-weight:700
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">🤝 KaamMitra</div>
+  <div class="tag">मेरो समस्या, नजिकैको समाधान।</div>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>सेवा छान्नुहोस्</h2>
+
+    <div class="grid">
+
+      <button class="cat" onclick="choose(this,'प्लम्बर')">
+        🔧 प्लम्बर
+      </button>
+
+      <button class="cat" onclick="choose(this,'इलेक्ट्रिसियन')">
+        ⚡ इलेक्ट्रिसियन
+      </button>
+
+      <button class="cat" onclick="choose(this,'बाइक मेकानिक')">
+        🏍️ बाइक मेकानिक
+      </button>
+
+      <button class="cat" onclick="choose(this,'सफाइ')">
+        🧹 सफाइ
+      </button>
+
+      <button class="cat" onclick="choose(this,'डेलिभरी')">
+        📦 डेलिभरी
+      </button>
+
+      <button class="cat" onclick="choose(this,'ट्युसन')">
+        📚 ट्युसन
+      </button>
+
+    </div>
+
+    <p id="selected">कुनै सेवा छानिएको छैन।</p>
+  </div>
+
+
+  <div class="card">
+
+    <h2>काम पोस्ट गर्नुहोस्</h2>
+
+    <input
+      id="name"
+      placeholder="तपाईंको नाम"
+    >
+
+    <textarea
+      id="description"
+      rows="4"
+      placeholder="कस्तो काम चाहिएको हो?"
+    ></textarea>
+
+    <input
+      id="location"
+      placeholder="स्थान"
+    >
+
+    <input
+      id="budget"
+      type="number"
+      placeholder="बजेट (रु.)"
+    >
+
+    <button
+      class="submit"
+      onclick="postJob()"
+    >
+      काम पोस्ट गर्नुहोस्
+    </button>
+
+    <div id="msg"></div>
+
+  </div>
+
+
+  <div class="card">
+
+    <h2>भुक्तानी हिसाब</h2>
+
+    <input
+      id="amount"
+      type="number"
+      value="1000"
+      placeholder="ग्राहकले तिर्ने रकम"
+    >
+
+    <button
+      class="submit"
+      onclick="calculate()"
+    >
+      हिसाब हेर्नुहोस्
+    </button>
+
+    <div id="paymentResult"></div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+let service = "";
+
+function choose(btn,value){
+
+  service = value;
+
+  document
+    .querySelectorAll(".cat")
+    .forEach(x => x.classList.remove("active"));
+
+  btn.classList.add("active");
+
+  document.getElementById("selected").innerText =
+    "छानिएको सेवा: " + value;
+}
+
+
+async function postJob(){
+
+  const payload = {
+
+    name:
+      document.getElementById("name").value.trim(),
+
+    service:
+
+      service,
+
+    description:
+      document.getElementById("description").value.trim(),
+
+    location:
+      document.getElementById("location").value.trim(),
+
+    budget:
+      Number(document.getElementById("budget").value)
+
+  };
+
+
+  if(
+    !payload.name ||
+    !payload.service ||
+    !payload.description ||
+    !payload.location ||
+    !payload.budget
+  ){
+
+    document.getElementById("msg").innerText =
+      "कृपया सबै विवरण भर्नुहोस्।";
+
+    return;
+  }
+
+
+  try{
+
+    const r = await fetch(
+      "/api/requests",
+      {
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify(payload)
+      }
+    );
+
+
+    const data = await r.json();
+
+    document.getElementById("msg").innerText =
+      data.message;
+
+  }
+
+  catch(e){
+
+    document.getElementById("msg").innerText =
+      "Server सँग सम्पर्क हुन सकेन।";
+
+  }
+
+}
+
+
+async function calculate(){
+
+  const amount =
+    Number(
+      document.getElementById("amount").value
+    );
+
+
+  if(!amount || amount <= 0) return;
+
+
+  try{
+
+    const r = await fetch(
+      "/api/payments/calculate",
+      {
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({amount})
+      }
+    );
+
+
+    const d = await r.json();
+
+
+    document.getElementById(
+      "paymentResult"
+    ).innerHTML =
+
+      `<div class="result">
+
+        ग्राहक:
+        <b>NPR ${d.customerPaid}</b>
+        <br>
+
+        KaamMitra शुल्क (10%):
+        <b>NPR ${d.platformFee}</b>
+        <br>
+
+        Helper पाउने:
+        <b>NPR ${d.helperPayout}</b>
+
+        <br><br>
+
+        Owner earning:
+
+        <div class="money">
+          NPR ${d.platformFee}
+        </div>
+
+      </div>`;
+
+  }
+
+  catch(e){
+
+    document.getElementById(
+      "paymentResult"
+    ).innerText =
+      "Server error";
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
